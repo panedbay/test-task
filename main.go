@@ -1,16 +1,15 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/panedbay/test-task/api"
 	"github.com/panedbay/test-task/db"
 )
 
 func main() {
-	fmt.Println("rrewrqweeqwqwer")
 	db.Init()
+
+	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
 	r.POST("/api/auth", api.PostAPIAuth)

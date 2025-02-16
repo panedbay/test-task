@@ -34,11 +34,18 @@ func GetUserFromJWT(token string) (string, error) {
 func PostAPIAuth(c *gin.Context) {
 	var a model.AuthRequest
 	if err := c.ShouldBindJSON(&a); err != nil {
-		c.Error(err)
-		c.Abort()
+		log.Print(err)
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Errors: "Неверный запрос"})
 		return
 	}
 	username := a.Username
+	password := a.Password
+	if username == "" || password == "" {
+		log.Printf("Invalid username or password fields - username:%s password:%s", username, password)
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Errors: "Неверный запрос"})
+		return
+	}
+
 	var result bool
 	err := db.DB.QueryRow("SELECT merch.f_employee_exists($1::TEXT)", username).Scan(&result)
 	if err != nil {
@@ -48,7 +55,6 @@ func PostAPIAuth(c *gin.Context) {
 	}
 
 	if result {
-		password := a.Password
 		var res bool
 		e := db.DB.QueryRow("SELECT merch.f_check_employee_credentials($1::TEXT, $2::TEXT)", username, password).Scan(&res)
 		if e != nil || !res {

@@ -9,6 +9,11 @@ services:
       POSTGRES_USER: arch
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: database
+    healthcheck:
+      test: PGPASSWORD='arch' psql -U arch --command='SELECT 1' --dbname=database
+      interval: 1s
+      timeout: 2s
+      retries: 5
   app:
     build: .
     ports:
@@ -19,7 +24,9 @@ services:
       DB_USER: arch
       DB_PASS: postgres
       DB_NAME: database
-      JWT_SECRET: secret
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
   
     

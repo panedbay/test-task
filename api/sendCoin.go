@@ -25,14 +25,21 @@ func PostAPISendCoin(c *gin.Context) {
 		return
 	}
 
-	var a model.SendCoinRequest
-	if err := c.ShouldBindJSON(&a); err != nil {
-		c.Error(err)
-		c.Abort()
+	var s model.SendCoinRequest
+	if e := c.ShouldBindJSON(&s); e != nil {
+		log.Print(e)
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Errors: "Неверный запрос"})
 		return
 	}
-	receiver := a.ToUser
-	amount := a.Amount
+
+	receiver := s.ToUser
+	amount := s.Amount
+
+	if receiver == "" || amount <= 0 {
+		log.Printf("Invalid ToUser or Amount fields - ToUser:%s Amount:%d", receiver, amount)
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{Errors: "Неверный запрос"})
+		return
+	}
 
 	_, err = db.DB.Exec("SELECT merch.f_transfer_coins($1::TEXT, $2::TEXT, $3)", username, receiver, amount)
 	if err != nil {
